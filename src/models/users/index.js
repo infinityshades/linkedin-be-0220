@@ -43,3 +43,4 @@ const userSchema = new mongoose.Schema({
 }, { timestamps: true})
 
 const userCollection = mongoose.model('users', userSchema);
+module.exports = userCollection;
