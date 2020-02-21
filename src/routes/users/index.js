@@ -104,11 +104,16 @@ router.patch('/:id/experience/:expid', async (req, res) => {
     }
 })
 
-router.delete('/:id/experience/:id', async(req,res)=>{
+router.delete('/:id/experience/:expid', async(req,res)=>{
     try{
         console.log('deleting experience');
+        const id = new ObjectId(req.params.id);
+        const expid = new ObjectId(req.params.expid);
+        const user = await users.findOneAndUpdate({
+            _id: id}, { $pull : {experience : {_id: expid}}});
     }catch(err){
         console.log(err);
+        res.status(500).json(err);
     }
 })
 
