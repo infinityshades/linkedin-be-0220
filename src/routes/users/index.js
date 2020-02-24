@@ -2,6 +2,8 @@ const express = require('express');
 const router = express.Router();
 const users = require('../../models/users/index');
 const ObjectId = require('mongoose').Types.ObjectId;
+const passport = require('passport');
+const{getToken} = require ('../../utils/auth');
 
 //Fetching all users
 router.get('/', async (req, res) => {
@@ -15,10 +17,51 @@ router.get('/', async (req, res) => {
     };
 })
 
-//Posting new user
-router.post('/', async (req, res) => {
+//Fetching a user
+router.get('/:id', async(req,res)=>{
+    try{
+        console.log('Fetching user');
+        const user = users.findById(req.params.id);
+        res.json(user);
+    } catch(err){
+        console.log(err);
+        res.status(500).json(err);
+    }
+})
+
+//User sign in
+router.post('/signin', passport.authenticate('local'), async(req,res)=>{
+    try{
+    console.log(req.user);
+    const token = getToken({_id:req.user._id, username: req.user.username});
+    console.log(token);
+    // res.json({
+    //     access_token: token,
+    //     user: req.user.username
+    // });
+    res.json({
+        access_token: token,
+        user:req.user
+    })
+} catch(err) {
+    console.log(err);
+    res.status(500).json(err);
+}
+})
+
+//Getting new token upon refreshing
+router.post('/refresh', passport.authenticate('jwt'), async(req,res)=>{
+    const token = getToken({_id: req.user._id, username: req.user.username})
+    res.json({
+        access_token: token,
+        user:req.user.username
+    })
+})
+
+//Posting new user || Registering new user
+router.post('/signup', async (req, res) => {
     try {
-        const newUser = await users.create(req.body);
+        const newUser = await users.register(req.body, req.body.password);
         res.json(newUser);
     } catch (err) {
         console.log(err);
@@ -28,8 +71,9 @@ router.post('/', async (req, res) => {
 
 
 //editing new user
-router.put('/:id', async (req, res) => {
+router.put('/:id', passport.authenticate('jwt'),async (req, res) => {
     try {
+        if (req.user._id === req.params.id) res.status(400).json(`Not authorised to edit information`)
         console.log(`editing user info`);
         delete req.body._id;
         delete req.body.createdAt;

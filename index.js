@@ -5,6 +5,8 @@ const cors = require('cors');
 const dotenv = require('dotenv');
 dotenv.config();
 const userRoute = require('./src/routes/users/index');
+const passport = require('passport');
+const auth = require('./src/utils/auth');
 
 mongoose.connect(process.env.MONGODBURL, {
     useNewUrlParser: true, 
@@ -20,4 +22,5 @@ app.listen(port,() =>{
 });
 
 app.use(express.json());
+app.use(passport.initialize());
 app.use('/users', userRoute);
